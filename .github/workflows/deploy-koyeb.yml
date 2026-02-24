@@ -1,0 +1,37 @@
+name: Deploy to Koyeb
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Koyeb CLI
+        uses: koyeb-community/koyeb-actions@v2
+        with:
+          api_token: ${{ secrets.KOYEB_API_TOKEN }}
+
+      - name: Deploy from GitHub to Koyeb
+        uses: koyeb/action-git-deploy@v1
+        with:
+          app-name: eshop
+          service-name: web
+          git-builder: buildpack
+          git-build-command: ./gradlew clean bootJar
+          git-run-command: java -jar build/libs/*.jar
+          service-instance-type: nano
+          service-regions: fra
+          service-ports: "8080:http"
+          service-routes: "/:8080"
+          service-checks: "8080:http:/product/list"
