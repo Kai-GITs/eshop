@@ -80,16 +80,11 @@ Fix: Add JavaScript confirmation in ProductList.html:
 ## Reflection 3:
 
 1. Code quality issue(s) fixed and strategy
-- Code coverage increased from 46% (before additional unit tests) to 97% (after adding controller and service unit tests).
-- PMD detected `UnnecessaryModifier` issues in `ProductService` because interface methods were explicitly marked `public`.
-- The strategy was to use a focused PMD ruleset first, so the issue was easy to identify and track in CI.
-- I fixed the issue by removing redundant `public` modifiers from all interface methods.
-- After the fix commit, `./gradlew pmdMain` passed and the same issue no longer appeared.
-- I kept this fix isolated in its own commit so the quality improvement is easy to review.
+- PMD detected `UnnecessaryModifier` issues in `ProductService`.
+- I fixed the issue by removing redundant `public` modifiers from interface methods.
+- The strategy was: run PMD, identify exact violation, apply focused fix, then run PMD again to verify the issue was gone.
 
 2. CI/CD evaluation (Continuous Integration and Continuous Deployment)
-- This repository already satisfies Continuous Integration because every push triggers automated checks (`test` in `ci.yml`, PMD analysis in `pmd.yml`, and supply-chain checks in `scorecard.yml`).
-- Integration quality is continuously validated since code changes are checked by machine, not manually by developers.
-- For deployment, `deploy-koyeb.yml` is configured to auto-deploy when `main/master` receives new commits, so releases are automated in the repository workflow.
-- With this setup, deployment can happen continuously without manual deploy commands, which matches the Continuous Deployment approach to a PaaS target.
-- The pipeline is simple, but it already covers build/test/scan/deploy stages required by this module.
+- Current workflow already meets Continuous Integration because each push runs automated testing (`ci.yml`) and code analysis (`pmd.yml` and `scorecard.yml`).
+- This setup enforces regular integration checks on every code change, so integration quality is continuously verified by automation.
+- Current workflow also meets Continuous Deployment because pushes to `main/master` trigger automatic deployment to Koyeb through `deploy-koyeb.yml`, without manual deploy steps.
