@@ -74,3 +74,22 @@ Fix: Add JavaScript confirmation in ProductList.html:
 - This duplication can reduce code quality because one change must be updated in many places.
 - A cleaner approach is to extract shared setup into a base test class or reusable helper methods.
 - For UI tests, applying Page Object can also reduce duplication and keep test cases focused on behavior.
+
+---
+
+## Reflection 3:
+
+1. Code quality issue(s) fixed and strategy
+- Code coverage increased from 46% (before additional unit tests) to 97% (after adding controller and service unit tests).
+- PMD detected `UnnecessaryModifier` issues in `ProductService` because interface methods were explicitly marked `public`.
+- The strategy was to use a focused PMD ruleset first, so the issue was easy to identify and track in CI.
+- I fixed the issue by removing redundant `public` modifiers from all interface methods.
+- After the fix commit, `./gradlew pmdMain` passed and the same issue no longer appeared.
+- I kept this fix isolated in its own commit so the quality improvement is easy to review.
+
+2. CI/CD evaluation (Continuous Integration and Continuous Deployment)
+- This repository already satisfies Continuous Integration because every push triggers automated checks (`test` in `ci.yml`, PMD analysis in `pmd.yml`, and supply-chain checks in `scorecard.yml`).
+- Integration quality is continuously validated since code changes are checked by machine, not manually by developers.
+- For deployment, `deploy-koyeb.yml` is configured to auto-deploy when `main/master` receives new commits, so releases are automated in the repository workflow.
+- With this setup, deployment can happen continuously without manual deploy commands, which matches the Continuous Deployment approach to a PaaS target.
+- The pipeline is simple, but it already covers build/test/scan/deploy stages required by this module.
