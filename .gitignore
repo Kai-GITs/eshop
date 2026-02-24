@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Local module docs ###
+Module*.pdf
+module*_extracted.txt
