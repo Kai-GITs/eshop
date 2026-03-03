@@ -95,20 +95,20 @@ Fix: Add JavaScript confirmation in ProductList.html:
 
 1. SOLID principles applied in this project
 
-- **SRP (Single Responsibility Principle)**: `CarController` is separated into its own file and only handles Car-related HTTP requests. `ProductController` handles only Product requests. Before the fix, `CarController` was defined inside `ProductController.java`, mixing two responsibilities in one file.
-- **OCP (Open/Closed Principle)**: `CarService` and `ProductService` are interfaces. New behavior can be added by creating new implementations without modifying existing service classes.
-- **LSP (Liskov Substitution Principle)**: In the `before-solid` version, `CarController extends ProductController`, which is wrong because `CarController` cannot substitute `ProductController` meaningfully — a Car page is not a Product page. After the fix, `CarController` is a standalone class with no inheritance, so the substitution issue is removed.
-- **ISP (Interface Segregation Principle)**: `CarService` interface only declares Car-related methods, and `ProductService` only declares Product-related methods. Each controller depends only on the interface it needs, with no forced irrelevant methods.
-- **DIP (Dependency Inversion Principle)**: In the `before-solid` version, `CarController` injected `CarServiceImpl` directly (a concrete class). After the fix, it injects `CarService` (the interface), so the high-level controller depends on the abstraction, not the concrete implementation.
+- **SRP (Single Responsibility Principle)**: `CarController` is moved into its own file and only handles Car-related HTTP requests. `ProductController` only handles Product requests. Before this fix, `CarController` was defined inside `ProductController.java`, which meant one file had two unrelated responsibilities.
+- **OCP (Open/Closed Principle)**: `CarService` and `ProductService` are defined as interfaces. If new behavior is needed, a new implementation class can be created without changing the existing service classes.
+- **LSP (Liskov Substitution Principle)**: In the `before-solid` version, `CarController extends ProductController`. This is wrong because `CarController` is not a proper substitute for `ProductController`. Car and Product are different domains, so inheritance here breaks the program's correctness. After the fix, `CarController` is a standalone class with no inheritance.
+- **ISP (Interface Segregation Principle)**: `CarService` only declares Car-related methods and `ProductService` only declares Product-related methods. Each controller depends on only the interface it actually needs, so no class is forced to depend on methods it does not use.
+- **DIP (Dependency Inversion Principle)**: In the `before-solid` version, `CarController` directly injected `CarServiceImpl`, which is a concrete class. After the fix, `CarController` injects `CarService`, which is the interface. This means the high-level controller depends on the abstraction, not the implementation detail.
 
 2. Advantages of applying SOLID principles
 
-- With **SRP**, when a bug exists in `CarController`, I only need to look at `CarController.java` without touching `ProductController.java`. The scope of change is clear and focused.
-- With **DIP**, if I want to swap `CarServiceImpl` for a mock or a different implementation in tests, I only need to provide a different bean — the controller code doesn't change at all.
-- With **ISP**, if a new feature requires a new Car-specific method, I add it only to `CarService` without polluting `ProductService` and breaking unrelated classes.
+- With **SRP**, `CarController` and `ProductController` are in separate files. A bug in Car logic only requires looking at `CarController.java`, with no risk of accidentally breaking Product logic in the same file.
+- With **DIP**, `CarController` depends on the `CarService` interface. If the implementation needs to be swapped or mocked in tests, only the bean needs to change and the controller code stays the same.
+- With **ISP**, adding a new Car-specific method only affects `CarService`. `ProductService` and all classes depending on it are not touched at all.
 
 3. Disadvantages of not applying SOLID principles
 
-- Without **SRP**, `ProductController.java` contained both `ProductController` and `CarController`. Changing Car logic risked accidentally breaking Product logic because they shared the same file and the same superclass.
-- Without **LSP**, `CarController extends ProductController` meant that anywhere `ProductController` was expected, a `CarController` could be passed in — but Car operations and Product operations are unrelated, so this could lead to unexpected behavior and hard-to-trace bugs.
-- Without **DIP**, `CarController` was tightly coupled to `CarServiceImpl`. Replacing it for testing or swapping the implementation would require changing the controller source code directly, increasing the risk of introducing new bugs.
+- Without **SRP**, both `ProductController` and `CarController` lived in `ProductController.java`. Any change to Car logic could accidentally affect Product behavior because they shared the same file and class hierarchy.
+- Without **LSP**, `CarController extends ProductController` creates a false inheritance relationship. Car requests and Product requests are completely different, so treating a `CarController` as a `ProductController` would lead to incorrect behavior that is hard to trace.
+- Without **DIP**, `CarController` was directly coupled to `CarServiceImpl`. Replacing or mocking the service for testing would require editing the controller source code, which increases the chance of introducing new bugs.
