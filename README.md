@@ -88,3 +88,27 @@ Fix: Add JavaScript confirmation in ProductList.html:
 - Current workflow already meets Continuous Integration because each push runs automated testing (`ci.yml`) and code analysis (`pmd.yml` and `scorecard.yml`).
 - This setup enforces regular integration checks on every code change, so integration quality is continuously verified by automation.
 - Current workflow also meets Continuous Deployment because pushes to `main/master` trigger automatic deployment to Koyeb through `deploy-koyeb.yml`, without manual deploy steps.
+
+---
+
+## Reflection 4:
+
+1. SOLID principles applied in this project
+
+- **SRP (Single Responsibility Principle)**: `CarController` is separated into its own file and only handles Car-related HTTP requests. `ProductController` handles only Product requests. Before the fix, `CarController` was defined inside `ProductController.java`, mixing two responsibilities in one file.
+- **OCP (Open/Closed Principle)**: `CarService` and `ProductService` are interfaces. New behavior can be added by creating new implementations without modifying existing service classes.
+- **LSP (Liskov Substitution Principle)**: In the `before-solid` version, `CarController extends ProductController`, which is wrong because `CarController` cannot substitute `ProductController` meaningfully — a Car page is not a Product page. After the fix, `CarController` is a standalone class with no inheritance, so the substitution issue is removed.
+- **ISP (Interface Segregation Principle)**: `CarService` interface only declares Car-related methods, and `ProductService` only declares Product-related methods. Each controller depends only on the interface it needs, with no forced irrelevant methods.
+- **DIP (Dependency Inversion Principle)**: In the `before-solid` version, `CarController` injected `CarServiceImpl` directly (a concrete class). After the fix, it injects `CarService` (the interface), so the high-level controller depends on the abstraction, not the concrete implementation.
+
+2. Advantages of applying SOLID principles
+
+- With **SRP**, when a bug exists in `CarController`, I only need to look at `CarController.java` without touching `ProductController.java`. The scope of change is clear and focused.
+- With **DIP**, if I want to swap `CarServiceImpl` for a mock or a different implementation in tests, I only need to provide a different bean — the controller code doesn't change at all.
+- With **ISP**, if a new feature requires a new Car-specific method, I add it only to `CarService` without polluting `ProductService` and breaking unrelated classes.
+
+3. Disadvantages of not applying SOLID principles
+
+- Without **SRP**, `ProductController.java` contained both `ProductController` and `CarController`. Changing Car logic risked accidentally breaking Product logic because they shared the same file and the same superclass.
+- Without **LSP**, `CarController extends ProductController` meant that anywhere `ProductController` was expected, a `CarController` could be passed in — but Car operations and Product operations are unrelated, so this could lead to unexpected behavior and hard-to-trace bugs.
+- Without **DIP**, `CarController` was tightly coupled to `CarServiceImpl`. Replacing it for testing or swapping the implementation would require changing the controller source code directly, increasing the risk of introducing new bugs.
