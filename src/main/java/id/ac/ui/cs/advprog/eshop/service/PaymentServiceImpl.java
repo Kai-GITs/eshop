@@ -31,11 +31,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setMethod(method);
         payment.setPaymentData(paymentData);
 
-        if (VOUCHER_METHOD.equals(method)) {
-            applyVoucherStatus(payment, paymentData);
-        } else if (BANK_TRANSFER_METHOD.equals(method)) {
-            applyBankTransferStatus(payment, paymentData);
-        }
+        applyPaymentMethodStatus(payment, method, paymentData);
 
         return paymentRepository.save(payment);
     }
@@ -102,5 +98,16 @@ public class PaymentServiceImpl implements PaymentService {
 
     private boolean isBlank(String value) {
         return value == null || value.isEmpty();
+    }
+
+    private void applyPaymentMethodStatus(Payment payment, String method, Map<String, String> paymentData) {
+        if (VOUCHER_METHOD.equals(method)) {
+            applyVoucherStatus(payment, paymentData);
+            return;
+        }
+
+        if (BANK_TRANSFER_METHOD.equals(method)) {
+            applyBankTransferStatus(payment, paymentData);
+        }
     }
 }
