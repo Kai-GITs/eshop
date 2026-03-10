@@ -20,6 +20,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -108,5 +109,53 @@ class PaymentServiceImplTest {
         assertEquals(1, result.size());
         assertEquals("payment-1", result.get(0).getId());
         verify(paymentRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testAddPaymentVoucherCodeValid() {
+        Map<String, String> voucherData = new HashMap<>();
+        voucherData.put("voucherCode", "ESHOP1234ABC5678");
+        doAnswer(invocation -> invocation.getArgument(0))
+                .when(paymentRepository).save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER_CODE", voucherData);
+
+        assertEquals(PaymentStatus.SUCCESS.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentVoucherCodeInvalidLength() {
+        Map<String, String> voucherData = new HashMap<>();
+        voucherData.put("voucherCode", "ESHOP1234ABC56789");
+        doAnswer(invocation -> invocation.getArgument(0))
+                .when(paymentRepository).save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER_CODE", voucherData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentVoucherCodeInvalidPrefix() {
+        Map<String, String> voucherData = new HashMap<>();
+        voucherData.put("voucherCode", "TOKO1234ABC5678");
+        doAnswer(invocation -> invocation.getArgument(0))
+                .when(paymentRepository).save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER_CODE", voucherData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentVoucherCodeInvalidDigitCount() {
+        Map<String, String> voucherData = new HashMap<>();
+        voucherData.put("voucherCode", "ESHOP1234ABCD567");
+        doAnswer(invocation -> invocation.getArgument(0))
+                .when(paymentRepository).save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER_CODE", voucherData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
     }
 }
