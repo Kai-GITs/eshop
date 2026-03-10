@@ -130,3 +130,21 @@ Fix: Add JavaScript confirmation in ProductList.html:
 - **Self-validating**: satisfied because each test has explicit assertions and clear pass/fail outcomes.
 - **Timely**: improved compared to previous workflow because tests were written before implementation in each RED phase.
 - Improvement target: reduce duplicated setup data further by extracting reusable test builders/helpers so test intent is easier to read.
+
+---
+
+## Reflection 6:
+
+1. Code smell findings from peer repository review
+- `Payment` still had manual accessor methods while Lombok already handled getter/setter generation, so the model had unnecessary duplication.
+- `PaymentRepository.findAll()` exposed internal mutable list state directly, which increased risk of accidental external mutation.
+- `PaymentServiceImpl` used repeated hardcoded strings for payment methods and statuses, which made behavior harder to maintain and easier to break when adding new paths.
+- Voucher method naming was inconsistent (`VOUCHER` vs `VOUCHER_CODE`), so valid voucher flows could be rejected depending on input source.
+
+2. Refactoring performed and impact
+- Removed redundant manual accessor duplication in `Payment` and kept Lombok-based accessors.
+- Changed `PaymentRepository.findAll()` to return a defensive copy (`new ArrayList<>(paymentData)`).
+- Centralized payment method/status values into constants and extracted helper methods (`resolveInitialStatus`, `isVoucherMethod`) to reduce duplicated branching logic.
+- Updated voucher handling to accept both `VOUCHER` and `VOUCHER_CODE`, and kept unknown methods rejected by default.
+- Updated order status synchronization to use `OrderStatus` enum values for clearer mapping.
+- Result: payment flow is easier to read, less fragile against string mismatch bugs, and safer from unintended repository state mutation.
