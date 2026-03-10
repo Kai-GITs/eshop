@@ -14,6 +14,9 @@ import java.util.UUID;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
+    private static final String VOUCHER_METHOD = "VOUCHER_CODE";
+    private static final String VOUCHER_CODE_KEY = "voucherCode";
+
     @Autowired
     private PaymentRepository paymentRepository;
 
@@ -25,13 +28,8 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setMethod(method);
         payment.setPaymentData(paymentData);
 
-        if ("VOUCHER_CODE".equals(method)) {
-            String voucherCode = paymentData.get("voucherCode");
-            if (isValidVoucherCode(voucherCode)) {
-                payment.setStatus(PaymentStatus.SUCCESS.getValue());
-            } else {
-                payment.setStatus(PaymentStatus.REJECTED.getValue());
-            }
+        if (VOUCHER_METHOD.equals(method)) {
+            applyVoucherStatus(payment, paymentData);
         }
 
         return paymentRepository.save(payment);
@@ -60,6 +58,15 @@ public class PaymentServiceImpl implements PaymentService {
             payment.getOrder().setStatus(OrderStatus.SUCCESS.getValue());
         } else if (PaymentStatus.REJECTED.getValue().equals(payment.getStatus())) {
             payment.getOrder().setStatus(OrderStatus.FAILED.getValue());
+        }
+    }
+
+    private void applyVoucherStatus(Payment payment, Map<String, String> paymentData) {
+        String voucherCode = paymentData == null ? null : paymentData.get(VOUCHER_CODE_KEY);
+        if (isValidVoucherCode(voucherCode)) {
+            payment.setStatus(PaymentStatus.SUCCESS.getValue());
+        } else {
+            payment.setStatus(PaymentStatus.REJECTED.getValue());
         }
     }
 
