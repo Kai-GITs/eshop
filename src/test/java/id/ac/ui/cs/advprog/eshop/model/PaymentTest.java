@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.eshop.model;
 
+import id.ac.ui.cs.advprog.eshop.enums.PaymentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,13 +39,13 @@ class PaymentTest {
         payment.setId("payment-1");
         payment.setOrder(order);
         payment.setMethod("VOUCHER_CODE");
-        payment.setStatus("SUCCESS");
+        payment.setStatus(PaymentStatus.SUCCESS.getValue());
         payment.setPaymentData(paymentData);
 
         assertEquals("payment-1", payment.getId());
         assertSame(order, payment.getOrder());
         assertEquals("VOUCHER_CODE", payment.getMethod());
-        assertEquals("SUCCESS", payment.getStatus());
+        assertEquals(PaymentStatus.SUCCESS.getValue(), payment.getStatus());
         assertSame(paymentData, payment.getPaymentData());
     }
 
@@ -53,7 +54,7 @@ class PaymentTest {
         Payment payment = new Payment();
         payment.setOrder(order);
         payment.setMethod("BANK_TRANSFER");
-        payment.setStatus("REJECTED");
+        payment.setStatus(PaymentStatus.REJECTED.getValue());
 
         Map<String, String> bankTransferData = new HashMap<>();
         bankTransferData.put("bankName", "BCA");
@@ -61,7 +62,7 @@ class PaymentTest {
         payment.setPaymentData(bankTransferData);
 
         assertEquals("BANK_TRANSFER", payment.getMethod());
-        assertEquals("REJECTED", payment.getStatus());
+        assertEquals(PaymentStatus.REJECTED.getValue(), payment.getStatus());
         assertEquals("BCA", payment.getPaymentData().get("bankName"));
         assertEquals("INV-1234", payment.getPaymentData().get("referenceCode"));
     }
