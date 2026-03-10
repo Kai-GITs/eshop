@@ -112,3 +112,39 @@ Fix: Add JavaScript confirmation in ProductList.html:
 - Without **SRP**, both `ProductController` and `CarController` lived in `ProductController.java`. Any change to Car logic could accidentally affect Product behavior because they shared the same file and class hierarchy.
 - Without **LSP**, `CarController extends ProductController` creates a false inheritance relationship. Car requests and Product requests are completely different, so treating a `CarController` as a `ProductController` would lead to incorrect behavior that is hard to trace.
 - Without **DIP**, `CarController` was directly coupled to `CarServiceImpl`. Replacing or mocking the service for testing would require editing the controller source code, which increases the chance of introducing new bugs.
+
+---
+
+## Reflection 5:
+
+1. Reflection on TDD flow based on Percival's self-evaluation questions
+- The RED-GREEN-REFACTOR workflow was useful because feedback came early from failing tests, especially on validation and update behavior in Order model, repository, and service.
+- Test feedback speed for unit tests was still productive, so the cycle stayed practical for iterative changes.
+- The tests helped detect both behavior mistakes and edge cases (invalid status, not found ID, author case-sensitivity) before integration-level issues appeared.
+- For future work, I should keep the same small-cycle approach, run targeted tests first, and then run the full unit suite before each commit.
+
+2. Reflection on F.I.R.S.T principle in current tests
+- **Fast**: mostly satisfied because tests run quickly and stay unit-level.
+- **Independent**: mostly satisfied because tests use fresh setup data and mocks per test case.
+- **Repeatable**: satisfied because results are deterministic and do not depend on external systems.
+- **Self-validating**: satisfied because each test has explicit assertions and clear pass/fail outcomes.
+- **Timely**: improved compared to previous workflow because tests were written before implementation in each RED phase.
+- Improvement target: reduce duplicated setup data further by extracting reusable test builders/helpers so test intent is easier to read.
+
+---
+
+## Reflection 6:
+
+1. Code smell findings from peer repository review
+- `Payment` still had manual accessor methods while Lombok already handled getter/setter generation, so the model had unnecessary duplication.
+- `PaymentRepository.findAll()` exposed internal mutable list state directly, which increased risk of accidental external mutation.
+- `PaymentServiceImpl` used repeated hardcoded strings for payment methods and statuses, which made behavior harder to maintain and easier to break when adding new paths.
+- Voucher method naming was inconsistent (`VOUCHER` vs `VOUCHER_CODE`), so valid voucher flows could be rejected depending on input source.
+
+2. Refactoring performed and impact
+- Removed redundant manual accessor duplication in `Payment` and kept Lombok-based accessors.
+- Changed `PaymentRepository.findAll()` to return a defensive copy (`new ArrayList<>(paymentData)`).
+- Centralized payment method/status values into constants and extracted helper methods (`resolveInitialStatus`, `isVoucherMethod`) to reduce duplicated branching logic.
+- Updated voucher handling to accept both `VOUCHER` and `VOUCHER_CODE`, and kept unknown methods rejected by default.
+- Updated order status synchronization to use `OrderStatus` enum values for clearer mapping.
+- Result: payment flow is easier to read, less fragile against string mismatch bugs, and safer from unintended repository state mutation.
