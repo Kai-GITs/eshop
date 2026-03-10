@@ -7,11 +7,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.ui.ExtendedModelMap;
+import org.springframework.ui.Model;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,69 +27,101 @@ class PaymentControllerTest {
     private PaymentController controller;
 
     @Test
-    void paymentDetailFormPage_shouldReturnHtmlForm() {
-        String response = controller.paymentDetailFormPage();
-        assertTrue(response.contains("Payment Detail Form"));
+    void paymentDetailFormPage_withoutQuery_shouldReturnFormView() {
+        Model model = new ExtendedModelMap();
+
+        String view = controller.paymentDetailFormPage(null, model);
+
+        assertEquals("paymentDetail", view);
+        assertEquals(null, model.getAttribute("payment"));
+        assertEquals(null, model.getAttribute("paymentId"));
     }
 
     @Test
-    void paymentDetailPage_whenNotFound_shouldReturnNotFoundHtml() {
+    void paymentDetailFormPage_withQuery_shouldRedirectToDetailPage() {
+        Model model = new ExtendedModelMap();
+
+        String view = controller.paymentDetailFormPage("payment-1", model);
+
+        assertEquals("redirect:/payment/detail/payment-1", view);
+    }
+
+    @Test
+    void paymentDetailFormPage_withBlankQuery_shouldReturnFormView() {
+        Model model = new ExtendedModelMap();
+
+        String view = controller.paymentDetailFormPage("", model);
+
+        assertEquals("paymentDetail", view);
+        assertEquals(null, model.getAttribute("payment"));
+        assertEquals(null, model.getAttribute("paymentId"));
+    }
+
+    @Test
+    void paymentDetailPage_whenNotFound_shouldReturnDetailViewWithNullPayment() {
         when(paymentService.getPayment("p-404")).thenReturn(null);
+        Model model = new ExtendedModelMap();
 
-        String response = controller.paymentDetailPage("p-404");
+        String view = controller.paymentDetailPage("p-404", model);
 
-        assertTrue(response.contains("Payment Detail"));
-        assertTrue(response.contains("Payment not found"));
+        assertEquals("paymentDetail", view);
+        assertEquals(null, model.getAttribute("payment"));
+        assertEquals("p-404", model.getAttribute("paymentId"));
         verify(paymentService).getPayment("p-404");
     }
 
     @Test
-    void paymentDetailPage_whenFound_shouldReturnPaymentId() {
+    void paymentDetailPage_whenFound_shouldReturnDetailViewWithPayment() {
         Payment payment = new Payment();
         payment.setId("payment-1");
         when(paymentService.getPayment("payment-1")).thenReturn(payment);
+        Model model = new ExtendedModelMap();
 
-        String response = controller.paymentDetailPage("payment-1");
+        String view = controller.paymentDetailPage("payment-1", model);
 
-        assertTrue(response.contains("Payment Detail"));
-        assertTrue(response.contains("payment-1"));
+        assertEquals("paymentDetail", view);
+        assertEquals(payment, model.getAttribute("payment"));
+        assertEquals("payment-1", model.getAttribute("paymentId"));
         verify(paymentService).getPayment("payment-1");
     }
 
     @Test
-    void paymentAdminListPage_shouldShowCount() {
+    void paymentAdminListPage_shouldReturnListViewAndModel() {
         Payment payment = new Payment();
         payment.setId("payment-1");
         when(paymentService.getAllPayments()).thenReturn(List.of(payment));
+        Model model = new ExtendedModelMap();
 
-        String response = controller.paymentAdminListPage();
+        String view = controller.paymentAdminListPage(model);
 
-        assertTrue(response.contains("Payment Admin List"));
-        assertTrue(response.contains("Total Payment: 1"));
+        assertEquals("paymentAdminList", view);
+        assertEquals(1, ((List<?>) model.getAttribute("payments")).size());
         verify(paymentService).getAllPayments();
     }
 
     @Test
-    void paymentAdminDetailPage_whenNotFound_shouldReturnNotFoundHtml() {
+    void paymentAdminDetailPage_whenNotFound_shouldReturnDetailViewWithNullPayment() {
         when(paymentService.getPayment("p-404")).thenReturn(null);
+        Model model = new ExtendedModelMap();
 
-        String response = controller.paymentAdminDetailPage("p-404");
+        String view = controller.paymentAdminDetailPage("p-404", model);
 
-        assertTrue(response.contains("Admin Payment Detail"));
-        assertTrue(response.contains("Payment not found"));
+        assertEquals("paymentAdminDetail", view);
+        assertEquals(null, model.getAttribute("payment"));
         verify(paymentService).getPayment("p-404");
     }
 
     @Test
-    void paymentAdminDetailPage_whenFound_shouldReturnPaymentId() {
+    void paymentAdminDetailPage_whenFound_shouldReturnDetailViewWithPayment() {
         Payment payment = new Payment();
         payment.setId("payment-2");
         when(paymentService.getPayment("payment-2")).thenReturn(payment);
+        Model model = new ExtendedModelMap();
 
-        String response = controller.paymentAdminDetailPage("payment-2");
+        String view = controller.paymentAdminDetailPage("payment-2", model);
 
-        assertTrue(response.contains("Admin Payment Detail"));
-        assertTrue(response.contains("payment-2"));
+        assertEquals("paymentAdminDetail", view);
+        assertEquals(payment, model.getAttribute("payment"));
         verify(paymentService).getPayment("payment-2");
     }
 

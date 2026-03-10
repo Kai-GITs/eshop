@@ -19,6 +19,16 @@
         </div>
         <button type="submit" class="btn btn-primary">Check</button>
     </form>
+
+    <div class="mt-4" th:if="${payment != null}">
+        <p><b>Payment ID:</b> <span th:text="${payment.id}"></span></p>
+        <p><b>Method:</b> <span th:text="${payment.method}"></span></p>
+        <p><b>Status:</b> <span th:text="${payment.status}"></span></p>
+    </div>
+
+    <div class="mt-4" th:if="${payment == null and paymentId != null}">
+        <p>Payment not found.</p>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
