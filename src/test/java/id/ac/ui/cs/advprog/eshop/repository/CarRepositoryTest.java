@@ -84,6 +84,8 @@ class CarRepositoryTest {
 
     @Test
     void update_whenNotFound_shouldReturnNull() {
+        carRepository.create(buildCar("car-1", "Brio", "White", 1));
+        carRepository.create(buildCar("car-2", "Jazz", "Blue", 3));
         Car updated = carRepository.update("unknown", buildCar("x", "Civic", "Black", 4));
         assertNull(updated);
     }

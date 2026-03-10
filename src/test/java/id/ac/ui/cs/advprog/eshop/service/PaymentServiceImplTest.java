@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -90,6 +91,17 @@ class PaymentServiceImplTest {
     }
 
     @Test
+    void testSetStatusToUnknownShouldNotChangeOrderStatus() {
+        String initialOrderStatus = order.getStatus();
+
+        Payment result = paymentService.setStatus(payment, "PENDING");
+
+        assertEquals("PENDING", result.getStatus());
+        assertEquals(initialOrderStatus, result.getOrder().getStatus());
+        verify(paymentRepository, times(1)).save(payment);
+    }
+
+    @Test
     void testGetPayment() {
         doReturn(payment).when(paymentRepository).findById("payment-1");
 
@@ -138,7 +150,7 @@ class PaymentServiceImplTest {
     @Test
     void testAddPaymentVoucherCodeInvalidPrefix() {
         Map<String, String> voucherData = new HashMap<>();
-        voucherData.put("voucherCode", "TOKO1234ABC5678");
+        voucherData.put("voucherCode", "TOKOO1234ABC5678");
         doAnswer(invocation -> invocation.getArgument(0))
                 .when(paymentRepository).save(any(Payment.class));
 
@@ -155,6 +167,16 @@ class PaymentServiceImplTest {
                 .when(paymentRepository).save(any(Payment.class));
 
         Payment result = paymentService.addPayment(order, "VOUCHER_CODE", voucherData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentVoucherCodeNullPaymentData() {
+        doAnswer(invocation -> invocation.getArgument(0))
+                .when(paymentRepository).save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER_CODE", null);
 
         assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
     }
@@ -196,5 +218,26 @@ class PaymentServiceImplTest {
         Payment result = paymentService.addPayment(order, "BANK_TRANSFER", bankTransferData);
 
         assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentBankTransferNullPaymentData() {
+        doAnswer(invocation -> invocation.getArgument(0))
+                .when(paymentRepository).save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "BANK_TRANSFER", null);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentUnknownMethod_shouldNotSetStatus() {
+        Map<String, String> data = new HashMap<>();
+        doAnswer(invocation -> invocation.getArgument(0))
+                .when(paymentRepository).save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "OTHER", data);
+
+        assertNull(result.getStatus());
     }
 }

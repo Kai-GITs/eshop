@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class PaymentRepositoryTest {
@@ -72,6 +73,40 @@ class PaymentRepositoryTest {
     void testFindByIdNotFound() {
         Payment findResult = paymentRepository.findById("unknown-payment");
         assertNull(findResult);
+    }
+
+    @Test
+    void testFindByIdNotFoundWithExistingData() {
+        paymentRepository.save(payments.get(0));
+        paymentRepository.save(payments.get(1));
+
+        Payment findResult = paymentRepository.findById("payment-unknown");
+
+        assertNull(findResult);
+    }
+
+    @Test
+    void testSaveUpdateExistingPayment() {
+        Payment existing = payments.get(0);
+        paymentRepository.save(existing);
+
+        Payment updated = new Payment();
+        updated.setId(existing.getId());
+        updated.setOrder(existing.getOrder());
+        updated.setMethod("BANK_TRANSFER");
+        updated.setStatus(PaymentStatus.REJECTED.getValue());
+        Map<String, String> updatedData = new HashMap<>();
+        updatedData.put("bankName", "BNI");
+        updatedData.put("referenceCode", "INV-9999");
+        updated.setPaymentData(updatedData);
+
+        Payment result = paymentRepository.save(updated);
+        Payment found = paymentRepository.findById(existing.getId());
+
+        assertNotNull(result);
+        assertEquals(existing.getId(), result.getId());
+        assertEquals("BANK_TRANSFER", found.getMethod());
+        assertEquals(PaymentStatus.REJECTED.getValue(), found.getStatus());
     }
 
     @Test
