@@ -11,6 +11,15 @@ public class PaymentRepository {
     private final List<Payment> paymentData = new ArrayList<>();
 
     public Payment save(Payment payment) {
+        int index = 0;
+        for (Payment savedPayment : paymentData) {
+            if (savedPayment.getId().equals(payment.getId())) {
+                paymentData.remove(index);
+                paymentData.add(index, payment);
+                return payment;
+            }
+            index += 1;
+        }
         paymentData.add(payment);
         return payment;
     }
@@ -25,6 +34,6 @@ public class PaymentRepository {
     }
 
     public List<Payment> findAll() {
-        return paymentData;
+        return new ArrayList<>(paymentData);
     }
 }
